@@ -4,15 +4,16 @@ import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 
 const Navbar = ({
-  terminoBusqueda,
-  setBusqueda,
-  manejarBusqueda,
-  usuarioAutenticado,
-  setUsuarioAutenticado,
-  checkingSesion,
-  carrito = [],
-  setMostrarCarrito, // ✅ recibimos del padre
-}) => {
+    terminoBusqueda,
+    setBusqueda,
+    manejarBusqueda,
+    usuarioAutenticado,
+    setUsuarioAutenticado,
+    checkingSesion,
+    carrito = [],
+    setCarrito,          // ✅ agrega esto
+    setMostrarCarrito,   // ya estaba
+  }) => {
   const navigate = useNavigate();
 
   const handleLogout = async () => {

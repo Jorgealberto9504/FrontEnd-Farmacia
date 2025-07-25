@@ -65,6 +65,7 @@ function App() {
   setUsuarioAutenticado={setUsuarioAutenticado}
   checkingSesion={checkingSesion}
   carrito={carrito}
+  setCarrito={setCarrito}        // ✅ ahora lo envías
   setMostrarCarrito={setMostrarCarrito}
 />
 
@@ -73,6 +74,7 @@ function App() {
   isOpen={mostrarCarrito}
   onClose={() => setMostrarCarrito(false)}
   carrito={carrito}
+  setCarrito={setCarrito}   // ✅ ahora sí lo envías
 />
   <div className="pt-20 px-4">
     <Routes>
