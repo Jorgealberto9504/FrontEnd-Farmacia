@@ -42,6 +42,34 @@ const Home = ({
     }
   }, [buscarAhora]);
 
+  const agregarAlCarrito = async (producto) => {
+    if (!usuarioAutenticado) {
+      return alert("Debes iniciar sesión para agregar productos al carrito");
+    }
+
+    try {
+      const res = await fetch("http://localhost:8080/api/cart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ productoId: producto._id }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("Producto agregado al carrito");
+        if (setCarrito) {
+          setCarrito(data.cart); // actualiza el carrito global si aplica
+        }
+      } else {
+        alert(data.message || "Error al agregar al carrito");
+      }
+    } catch (error) {
+      console.error("Error al agregar al carrito:", error);
+    }
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Lista de Medicamentos</h2>
@@ -59,6 +87,13 @@ const Home = ({
               <h3 className="font-semibold">{med.nombreComercial}</h3>
               <p className="text-sm text-gray-600">{med.descripcion}</p>
               <p className="text-blue-700 font-bold">${med.precio}</p>
+
+              <button
+                onClick={() => agregarAlCarrito(med)}
+                className="mt-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+              >
+                Agregar al carrito
+              </button>
             </div>
           ))}
         </div>
