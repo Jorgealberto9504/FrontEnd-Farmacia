@@ -46,22 +46,18 @@ const Home = ({
     if (!usuarioAutenticado) {
       return alert("Debes iniciar sesión para agregar productos al carrito");
     }
-
+  
     try {
-      const res = await fetch("http://localhost:8080/api/cart", {
+      const res = await fetch(`http://localhost:8080/api/cart/add/${producto.codigo}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ productoId: producto._id }),
       });
-
+  
       const data = await res.json();
-
+  
       if (res.ok) {
         alert("Producto agregado al carrito");
-        if (setCarrito) {
-          setCarrito(data.cart); // actualiza el carrito global si aplica
-        }
+        setCarrito(data.cart);
       } else {
         alert(data.message || "Error al agregar al carrito");
       }
@@ -90,7 +86,7 @@ const Home = ({
 
               <button
                 onClick={() => agregarAlCarrito(med)}
-                className="mt-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 w-full"
+                className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 w-full mt-2"
               >
                 Agregar al carrito
               </button>

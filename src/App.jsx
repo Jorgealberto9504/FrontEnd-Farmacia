@@ -5,13 +5,15 @@ import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Navbar from "./components/Navbar";
 import { useEffect, useState } from "react";
+import CarritoModal from "./components/CarritoModal";
 
 function App() {
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(false);
   const [checkingSesion, setCheckingSesion] = useState(true);
-  const [carrito, setCarrito] = useState(null);
+  const [carrito, setCarrito] = useState(false);
   const [buscarAhora, setBuscarAhora] = useState(false); // 👉 nuevo estado
+  const [mostrarCarrito, setMostrarCarrito] = useState(false);
 
   useEffect(() => {
     const checkSesion = async () => {
@@ -55,42 +57,51 @@ function App() {
 
   return (
     <Router>
-      <Navbar
-        terminoBusqueda={terminoBusqueda}
-        setBusqueda={setTerminoBusqueda}
-        manejarBusqueda={manejarBusqueda}
-        usuarioAutenticado={usuarioAutenticado}
-        setUsuarioAutenticado={setUsuarioAutenticado}
-        checkingSesion={checkingSesion}
-        carrito={carrito}
-      />
-      <div className="pt-20 px-4">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <Home
-                terminoBusqueda={terminoBusqueda}
-                buscarAhora={buscarAhora}
-                setBuscarAhora={setBuscarAhora}
-                usuarioAutenticado={usuarioAutenticado}
-                checkingSesion={checkingSesion}
-                setCarrito={setCarrito}
-              />
-            }
-          />
-          <Route
-  path="/login"
-  element={<Login setUsuarioAutenticado={setUsuarioAutenticado} />}
+ <Navbar
+  terminoBusqueda={terminoBusqueda}
+  setBusqueda={setTerminoBusqueda}
+  manejarBusqueda={manejarBusqueda}
+  usuarioAutenticado={usuarioAutenticado}
+  setUsuarioAutenticado={setUsuarioAutenticado}
+  checkingSesion={checkingSesion}
+  carrito={carrito}
+  setMostrarCarrito={setMostrarCarrito}
 />
-          <Route path="/register" element={<Register />} />
-          <Route
-            path="/cart"
-            element={<Cart usuarioAutenticado={usuarioAutenticado} />}
+
+  {/* ✅ Montar CarritoModal aquí */}
+  <CarritoModal
+  isOpen={mostrarCarrito}
+  onClose={() => setMostrarCarrito(false)}
+  carrito={carrito}
+/>
+  <div className="pt-20 px-4">
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <Home
+            terminoBusqueda={terminoBusqueda}
+            buscarAhora={buscarAhora}
+            setBuscarAhora={setBuscarAhora}
+            usuarioAutenticado={usuarioAutenticado}
+            checkingSesion={checkingSesion}
+            setCarrito={setCarrito}
+            carrito={carrito}
           />
-        </Routes>
-      </div>
-    </Router>
+        }
+      />
+      <Route
+        path="/login"
+        element={<Login setUsuarioAutenticado={setUsuarioAutenticado} />}
+      />
+      <Route path="/register" element={<Register />} />
+      <Route
+        path="/cart"
+        element={<Cart usuarioAutenticado={usuarioAutenticado} />}
+      />
+    </Routes>
+  </div>
+</Router>
   );
 }
 
