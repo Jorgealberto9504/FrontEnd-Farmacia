@@ -1,3 +1,4 @@
+// src/components/CarritoModal.jsx
 import React from "react";
 
 const CarritoModal = ({ isOpen, onClose, carrito, setCarrito }) => {
@@ -5,12 +6,14 @@ const CarritoModal = ({ isOpen, onClose, carrito, setCarrito }) => {
 
   const productos = carrito?.productos || [];
 
-  // 🔹 Eliminar producto del carrito
+  // 🔹 Calcular total
+  const total = productos.reduce(
+    (acc, item) => acc + (item.productoId?.precio || 0) * item.cantidad,
+    0
+  );
+
+  // 🔹 Eliminar producto
   const eliminarProducto = async (codigo) => {
-    if (!codigo) {
-      alert("Código de producto no encontrado");
-      return;
-    }
     try {
       const res = await fetch(`http://localhost:8080/api/cart/remove/${codigo}`, {
         method: "DELETE",
@@ -21,13 +24,36 @@ const CarritoModal = ({ isOpen, onClose, carrito, setCarrito }) => {
 
       if (res.ok) {
         alert("Producto eliminado del carrito");
-        setCarrito(data.cart); // 🔥 Actualiza el carrito global
+        setCarrito(data.cart);
       } else {
         alert(data.message || "Error al eliminar producto");
       }
     } catch (error) {
       console.error("Error al eliminar:", error);
       alert("Error al eliminar producto");
+    }
+  };
+
+  // 🔹 Finalizar compra
+  const finalizarCompra = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/cart/purchase", {
+        method: "POST",
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        alert("✅ Compra realizada con éxito. Código de ticket: " + data.ticket.codigo);
+        setCarrito({ productos: [] }); // 🔥 vacía el carrito en frontend
+        onClose();
+      } else {
+        alert(data.message || "Error en la compra");
+      }
+    } catch (error) {
+      console.error("Error en la compra:", error);
+      alert("Error al finalizar la compra");
     }
   };
 
@@ -46,33 +72,41 @@ const CarritoModal = ({ isOpen, onClose, carrito, setCarrito }) => {
         {productos.length === 0 ? (
           <p className="text-gray-600">Tu carrito está vacío.</p>
         ) : (
-          productos.map((item) => {
-            const producto = item.productoId || {};
-            const codigo = producto.codigo || item.codigo;
-            const nombre = producto.nombreComercial || "Producto sin nombre";
-
-            return (
-              <div key={item._id} className="flex justify-between items-center mb-2 border-b pb-2">
-                <span>{nombre}</span>
-                <span className="text-sm text-gray-500">Cantidad: {item.cantidad}</span>
-                <button
-                  onClick={() => eliminarProducto(codigo)}
-                  className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 ml-2"
-                >
-                  🗑 Eliminar
-                </button>
-              </div>
-            );
-          })
+          productos.map((item) => (
+            <div key={item._id} className="flex justify-between items-center mb-2 border-b pb-2">
+              <span>{item.productoId?.nombreComercial || "Producto sin nombre"}</span>
+              <span className="text-sm text-gray-500">Cantidad: {item.cantidad}</span>
+              <button
+                onClick={() => eliminarProducto(item.productoId?.codigo)}
+                className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 ml-2"
+              >
+                🗑 Eliminar
+              </button>
+            </div>
+          ))
         )}
 
-        <div className="flex justify-end mt-4">
+        {/* 🔹 Mostrar total */}
+        {productos.length > 0 && (
+          <p className="mt-3 font-bold text-right">💰 Total: ${total.toFixed(2)}</p>
+        )}
+
+        <div className="flex justify-between mt-4">
           <button
             onClick={onClose}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
           >
             Seguir comprando
           </button>
+
+          {productos.length > 0 && (
+            <button
+              onClick={finalizarCompra}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              ✅ Finalizar compra
+            </button>
+          )}
         </div>
       </div>
     </div>
