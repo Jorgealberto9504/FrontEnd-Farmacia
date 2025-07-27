@@ -16,16 +16,22 @@ const Login = ({ setUsuarioAutenticado }) => {
       const response = await fetch("http://localhost:8080/api/sessions/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // importante para las cookies HttpOnly
+        credentials: "include", // importante para cookies HttpOnly
         body: JSON.stringify({ email, password }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        setUsuarioAutenticado(true); // 👈 actualización inmediata
+        // ✅ guardar datos en localStorage
+        localStorage.setItem("role", data.user.role);
+        localStorage.setItem("userName", data.user.name);
+
+        setUsuarioAutenticado(true);
         setMensaje("Inicio de sesión exitoso");
-        navigate("/"); // Redirige al inicio
+
+        // ✅ si es admin, redirigir a /admin
+        navigate(data.user.role === "admin" ? "/admin" : "/");
       } else {
         setMensaje(data.message || "Credenciales inválidas");
       }

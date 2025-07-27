@@ -6,6 +6,8 @@ import Cart from "./pages/Cart";
 import Navbar from "./components/Navbar";
 import { useEffect, useState } from "react";
 import CarritoModal from "./components/CarritoModal";
+import AdminPanel from "./pages/AdminPanel";
+
 
 function App() {
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
@@ -78,6 +80,7 @@ function App() {
 />
   <div className="pt-20 px-4">
     <Routes>
+    <Route path="/admin" element={<AdminPanel usuarioAutenticado={usuarioAutenticado} />} />
       <Route
         path="/"
         element={
