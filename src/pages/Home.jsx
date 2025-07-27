@@ -7,6 +7,7 @@ const Home = ({
   usuarioAutenticado,
   checkingSesion,
   setCarrito,
+  carrito
 }) => {
   const [medicamentos, setMedicamentos] = useState([]);
 
@@ -14,15 +15,11 @@ const Home = ({
     try {
       const res = await fetch(`http://localhost:8080/api/products`);
       const data = await res.json();
-
       const todos = data.products || [];
 
       if (termino.trim() !== "") {
         const filtro = termino.toLowerCase();
-        const filtrados = todos.filter((m) =>
-          m.nombreComercial.toLowerCase().includes(filtro)
-        );
-        setMedicamentos(filtrados);
+        setMedicamentos(todos.filter((m) => m.nombreComercial.toLowerCase().includes(filtro)));
       } else {
         setMedicamentos(todos);
       }
@@ -32,7 +29,7 @@ const Home = ({
   };
 
   useEffect(() => {
-    obtenerMedicamentos(); // carga todos al inicio
+    obtenerMedicamentos();
   }, []);
 
   useEffect(() => {
@@ -46,15 +43,15 @@ const Home = ({
     if (!usuarioAutenticado) {
       return alert("Debes iniciar sesión para agregar productos al carrito");
     }
-  
+
     try {
       const res = await fetch(`http://localhost:8080/api/cart/add/${producto.codigo}`, {
         method: "POST",
         credentials: "include",
       });
-  
+
       const data = await res.json();
-  
+
       if (res.ok) {
         alert("Producto agregado al carrito");
         setCarrito(data.cart);
@@ -73,25 +70,42 @@ const Home = ({
         <p>No se encontraron medicamentos.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {medicamentos.map((med, i) => (
-            <div key={i} className="border p-4 rounded shadow">
-              <img
-                src={med.imagen || "/imagen-default.png"}
-                alt={med.nombreComercial}
-                className="h-32 w-full object-cover mb-2"
-              />
-              <h3 className="font-semibold">{med.nombreComercial}</h3>
-              <p className="text-sm text-gray-600">{med.descripcion}</p>
-              <p className="text-blue-700 font-bold">${med.precio}</p>
+          {medicamentos.map((med, i) => {
+            // ✅ cantidad actual de este producto en el carrito
+            const cantidadEnCarrito =
+              carrito?.productos?.find((p) => p.productoId?.codigo === med.codigo)?.cantidad || 0;
 
-              <button
-                onClick={() => agregarAlCarrito(med)}
-                className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 w-full mt-2"
-              >
-                Agregar al carrito
-              </button>
-            </div>
-          ))}
+            const disponible = med.stock - cantidadEnCarrito;
+
+            return (
+              <div key={i} className="border p-4 rounded shadow">
+                <img
+                  src={med.imagen || "/imagen-default.png"}
+                  alt={med.nombreComercial}
+                  className="h-32 w-full object-cover mb-2"
+                />
+                <h3 className="font-semibold">{med.nombreComercial}</h3>
+                <p className="text-sm text-gray-600">{med.descripcion}</p>
+                <p className="text-blue-700 font-bold">${med.precio}</p>
+
+                {disponible > 0 ? (
+                  <button
+                    onClick={() => agregarAlCarrito(med)}
+                    className="bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 w-full mt-2"
+                  >
+                    Agregar al carrito
+                  </button>
+                ) : (
+                  <button
+                    disabled
+                    className="bg-gray-400 text-white py-2 px-4 rounded w-full mt-2 cursor-not-allowed"
+                  >
+                    No disponible
+                  </button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

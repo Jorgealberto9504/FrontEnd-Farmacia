@@ -1,9 +1,9 @@
-// src/components/CarritoModal.jsx
-import React from "react";
+import React, { useState } from "react";
 
 const CarritoModal = ({ isOpen, onClose, carrito, setCarrito }) => {
   if (!isOpen) return null;
 
+  const [loading, setLoading] = useState(false); // ✅ estado para loading
   const productos = carrito?.productos || [];
 
   // 🔹 Calcular total
@@ -34,8 +34,9 @@ const CarritoModal = ({ isOpen, onClose, carrito, setCarrito }) => {
     }
   };
 
-  // 🔹 Finalizar compra
+  // 🔹 Finalizar compra con estado loading
   const finalizarCompra = async () => {
+    setLoading(true); // ✅ activar loading
     try {
       const res = await fetch("http://localhost:8080/api/cart/purchase", {
         method: "POST",
@@ -46,7 +47,7 @@ const CarritoModal = ({ isOpen, onClose, carrito, setCarrito }) => {
 
       if (res.ok) {
         alert("✅ Compra realizada con éxito. Código de ticket: " + data.ticket.codigo);
-        setCarrito({ productos: [] }); // 🔥 vacía el carrito en frontend
+        setCarrito({ productos: [] });
         onClose();
       } else {
         alert(data.message || "Error en la compra");
@@ -54,6 +55,8 @@ const CarritoModal = ({ isOpen, onClose, carrito, setCarrito }) => {
     } catch (error) {
       console.error("Error en la compra:", error);
       alert("Error al finalizar la compra");
+    } finally {
+      setLoading(false); // ✅ desactivar loading
     }
   };
 
@@ -102,9 +105,12 @@ const CarritoModal = ({ isOpen, onClose, carrito, setCarrito }) => {
           {productos.length > 0 && (
             <button
               onClick={finalizarCompra}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              disabled={loading} // ✅ desactiva mientras carga
+              className={`px-4 py-2 rounded text-white ${
+                loading ? "bg-yellow-500 cursor-wait" : "bg-green-600 hover:bg-green-700"
+              }`}
             >
-              ✅ Finalizar compra
+              {loading ? "⏳ Generando ticket..." : "✅ Finalizar compra"}
             </button>
           )}
         </div>
