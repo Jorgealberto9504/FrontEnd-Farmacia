@@ -62,10 +62,16 @@ const Navbar = ({
       <div className="flex space-x-4 items-center">
         {/* 🔹 Si es admin mostrar botón */}
         {role === "admin" && (
-          <Link to="/admin" className="text-purple-600 hover:underline font-semibold">
-            Panel Admin
-          </Link>
-        )}
+  <>
+    <Link to="/admin" className="text-purple-600 hover:underline font-semibold">
+      Panel Admin
+    </Link>
+    <Link to="/admin/pedidos" className="text-green-600 hover:underline font-semibold">
+      Pedidos
+    </Link>
+  </>
+)}
+        
 
         {/* 🔹 Carrito */}
         <button

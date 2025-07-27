@@ -7,14 +7,14 @@ import Navbar from "./components/Navbar";
 import { useEffect, useState } from "react";
 import CarritoModal from "./components/CarritoModal";
 import AdminPanel from "./pages/AdminPanel";
-
+import PedidosAdmin from "./pages/PedidosAdmin"; // ✅ IMPORTACIÓN FALTANTE
 
 function App() {
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
   const [usuarioAutenticado, setUsuarioAutenticado] = useState(false);
   const [checkingSesion, setCheckingSesion] = useState(true);
   const [carrito, setCarrito] = useState(false);
-  const [buscarAhora, setBuscarAhora] = useState(false); // 👉 nuevo estado
+  const [buscarAhora, setBuscarAhora] = useState(false);
   const [mostrarCarrito, setMostrarCarrito] = useState(false);
 
   useEffect(() => {
@@ -23,14 +23,12 @@ function App() {
         const res = await fetch("http://localhost:8080/api/sessions/current", {
           credentials: "include",
         });
-  
+
         if (res.ok) {
           const data = await res.json();
-          console.log("Usuario autenticado:", data.user); // ✅ importante
+          console.log("Usuario autenticado:", data.user);
           setUsuarioAutenticado(true);
-          // Aquí también podrías guardar data.user si lo necesitas
-  
-          // Obtener carrito si está autenticado
+
           const resCart = await fetch("http://localhost:8080/api/cart", {
             credentials: "include",
           });
@@ -46,69 +44,62 @@ function App() {
         setCheckingSesion(false);
       }
     };
-  
+
     checkSesion();
   }, []);
 
-  // 👉 Función para manejar búsqueda (Enter o click)
   const manejarBusqueda = (e) => {
     if (!e || (e.key && e.key === "Enter")) {
-      setBuscarAhora(true); // 🔥 activa búsqueda
+      setBuscarAhora(true);
     }
   };
 
   return (
     <Router>
- <Navbar
-  terminoBusqueda={terminoBusqueda}
-  setBusqueda={setTerminoBusqueda}
-  manejarBusqueda={manejarBusqueda}
-  usuarioAutenticado={usuarioAutenticado}
-  setUsuarioAutenticado={setUsuarioAutenticado}
-  checkingSesion={checkingSesion}
-  carrito={carrito}
-  setCarrito={setCarrito}        // ✅ ahora lo envías
-  setMostrarCarrito={setMostrarCarrito}
-/>
+      <Navbar
+        terminoBusqueda={terminoBusqueda}
+        setBusqueda={setTerminoBusqueda}
+        manejarBusqueda={manejarBusqueda}
+        usuarioAutenticado={usuarioAutenticado}
+        setUsuarioAutenticado={setUsuarioAutenticado}
+        checkingSesion={checkingSesion}
+        carrito={carrito}
+        setCarrito={setCarrito}
+        setMostrarCarrito={setMostrarCarrito}
+      />
 
-  {/* ✅ Montar CarritoModal aquí */}
-  <CarritoModal
-  isOpen={mostrarCarrito}
-  onClose={() => setMostrarCarrito(false)}
-  carrito={carrito}
-  setCarrito={setCarrito}   // ✅ ahora sí lo envías
-/>
-  <div className="pt-20 px-4">
-    <Routes>
-    <Route path="/admin" element={<AdminPanel usuarioAutenticado={usuarioAutenticado} />} />
-      <Route
-        path="/"
-        element={
-          <Home
-            terminoBusqueda={terminoBusqueda}
-            buscarAhora={buscarAhora}
-            setBuscarAhora={setBuscarAhora}
-            usuarioAutenticado={usuarioAutenticado}
-            checkingSesion={checkingSesion}
-            setCarrito={setCarrito}
-            carrito={carrito}
+      <CarritoModal
+        isOpen={mostrarCarrito}
+        onClose={() => setMostrarCarrito(false)}
+        carrito={carrito}
+        setCarrito={setCarrito}
+      />
+
+      <div className="pt-20 px-4">
+        <Routes>
+          <Route path="/admin/pedidos" element={<PedidosAdmin />} /> 
+          <Route path="/admin" element={<AdminPanel usuarioAutenticado={usuarioAutenticado} />} />
+          <Route
+            path="/"
+            element={
+              <Home
+                terminoBusqueda={terminoBusqueda}
+                buscarAhora={buscarAhora}
+                setBuscarAhora={setBuscarAhora}
+                usuarioAutenticado={usuarioAutenticado}
+                checkingSesion={checkingSesion}
+                setCarrito={setCarrito}
+                carrito={carrito}
+              />
+            }
           />
-        }
-      />
-      <Route
-        path="/login"
-        element={<Login setUsuarioAutenticado={setUsuarioAutenticado} />}
-      />
-      <Route path="/register" element={<Register />} />
-      <Route
-        path="/cart"
-        element={<Cart usuarioAutenticado={usuarioAutenticado} />}
-      />
-    </Routes>
-  </div>
-</Router>
+          <Route path="/login" element={<Login setUsuarioAutenticado={setUsuarioAutenticado} />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/cart" element={<Cart usuarioAutenticado={usuarioAutenticado} />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
 export default App;
-
