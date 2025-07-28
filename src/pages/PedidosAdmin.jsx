@@ -29,17 +29,17 @@ const PedidosAdmin = () => {
   }, []);
 
   // 🔹 Marcar como surtido
-  const marcarSurtido = async (id) => {
+  const marcarSurtido = async (codigo) => {   // 👈 recibe codigo, no id
     if (!window.confirm("¿Marcar este pedido como surtido?")) return;
     try {
-      const res = await fetch(`http://localhost:8080/api/tickets/marcar-surtido/${id}`, {
+      const res = await fetch(`http://localhost:8080/api/tickets/surtir/${codigo}`, {   // ✅ corregida la URL
         method: "PUT",
         credentials: "include",
       });
       const data = await res.json();
       if (res.ok) {
         alert("✅ Pedido marcado como surtido");
-        obtenerPedidos();
+        obtenerPedidos();  // ✅ vuelve a cargar la lista
       } else {
         alert(data.message || "Error al actualizar estado del pedido");
       }
@@ -73,11 +73,11 @@ const PedidosAdmin = () => {
             </ul>
 
             <button
-              onClick={() => marcarSurtido(t._id)}
-              className="bg-green-600 text-white px-4 py-2 mt-3 rounded hover:bg-green-700"
-            >
-              ✔️ Marcar como Surtido
-            </button>
+  onClick={() => marcarSurtido(t.codigo)}   // ✅ Enviar código
+  className="bg-green-600 text-white px-4 py-2 mt-3 rounded hover:bg-green-700"
+>
+  ✔️ Marcar como Surtido
+</button>
           </div>
         ))
       )}
