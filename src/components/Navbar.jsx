@@ -69,6 +69,9 @@ const Navbar = ({
     <Link to="/admin/pedidos" className="text-green-600 hover:underline font-semibold">
       Pedidos
     </Link>
+    <Link to="/admin/carousel" className="text-blue-500 hover:underline font-semibold">
+      Carrusel
+    </Link>
   </>
 )}
         

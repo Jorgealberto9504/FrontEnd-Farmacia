@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Carousel from "../components/Carousel"; 
 
 const Home = ({
   terminoBusqueda,
@@ -10,7 +11,9 @@ const Home = ({
   carrito
 }) => {
   const [medicamentos, setMedicamentos] = useState([]);
+  const [promociones, setPromociones] = useState([]); // ✅ Ahora vacío, se llenará desde la API
 
+  // ✅ Obtener medicamentos
   const obtenerMedicamentos = async (termino = "") => {
     try {
       const res = await fetch(`http://localhost:8080/api/products`);
@@ -28,8 +31,29 @@ const Home = ({
     }
   };
 
+  // ✅ Obtener imágenes del carrusel y adaptarlas al formato del componente
+  const obtenerPromociones = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/api/carousel");
+      const data = await res.json();
+
+      if (res.ok) {
+        const imgs = (data.images || []).map(img => ({
+          url: `http://localhost:8080${img.imagen}`,
+          titulo: img.titulo,
+          descripcion: img.descripcion,
+          link: img.link
+        }));
+        setPromociones(imgs);
+      }
+    } catch (error) {
+      console.error("Error al obtener promociones:", error);
+    }
+  };
+
   useEffect(() => {
     obtenerMedicamentos();
+    obtenerPromociones(); // ✅ ahora sí se llama
   }, []);
 
   useEffect(() => {
@@ -39,6 +63,7 @@ const Home = ({
     }
   }, [buscarAhora]);
 
+  // ✅ Agregar producto al carrito
   const agregarAlCarrito = async (producto) => {
     if (!usuarioAutenticado) {
       return alert("Debes iniciar sesión para agregar productos al carrito");
@@ -51,7 +76,6 @@ const Home = ({
       });
 
       const data = await res.json();
-
       if (res.ok) {
         alert("Producto agregado al carrito");
         setCarrito(data.cart);
@@ -65,16 +89,21 @@ const Home = ({
 
   return (
     <div>
+      {/* ✅ Carrusel de Promociones */}
+      {promociones.length > 0 && (
+        <div className="mb-6">
+          <Carousel images={promociones} />
+        </div>
+      )}
+
       <h2 className="text-2xl font-bold mb-4">Lista de Medicamentos</h2>
       {medicamentos.length === 0 ? (
         <p>No se encontraron medicamentos.</p>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {medicamentos.map((med, i) => {
-            // ✅ cantidad actual de este producto en el carrito
             const cantidadEnCarrito =
               carrito?.productos?.find((p) => p.productoId?.codigo === med.codigo)?.cantidad || 0;
-
             const disponible = med.stock - cantidadEnCarrito;
 
             return (

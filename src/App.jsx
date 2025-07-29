@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import CarritoModal from "./components/CarritoModal";
 import AdminPanel from "./pages/AdminPanel";
 import PedidosAdmin from "./pages/PedidosAdmin"; // ✅ IMPORTACIÓN FALTANTE
+import AdminCarousel from "./pages/AdminCarousel";
+
 
 function App() {
   const [terminoBusqueda, setTerminoBusqueda] = useState("");
@@ -77,6 +79,7 @@ function App() {
 
       <div className="pt-20 px-4">
         <Routes>
+        <Route path="/admin/carousel" element={<AdminCarousel />} />
           <Route path="/admin/pedidos" element={<PedidosAdmin />} /> 
           <Route path="/admin" element={<AdminPanel usuarioAutenticado={usuarioAutenticado} />} />
           <Route
