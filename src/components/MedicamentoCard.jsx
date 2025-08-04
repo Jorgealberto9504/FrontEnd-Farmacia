@@ -6,7 +6,7 @@ const MedicamentoCard = ({ producto }) => {
     try {
       const response = await fetch(`http://localhost:8080/api/cart/add/${producto.codigo}`, {
         method: "POST",
-        credentials: "include", // importante para cookies HttpOnly
+        credentials: "include",
       });
 
       const data = await response.json();
@@ -14,7 +14,6 @@ const MedicamentoCard = ({ producto }) => {
       if (response.ok) {
         alert("✅ Producto agregado al carrito");
         console.log("Carrito actualizado:", data.cart);
-        // Aquí puedes actualizar el carrito en estado global si lo usas (como con Context)
       } else {
         alert(`❌ Error: ${data.message}`);
       }
@@ -25,13 +24,24 @@ const MedicamentoCard = ({ producto }) => {
   };
 
   return (
-    <div className="border p-4 rounded shadow-md hover:shadow-lg">
-      <img src={producto.imagen} alt={producto.nombreComercial} className="h-32 object-cover mb-2 mx-auto" />
-      <h3 className="text-lg font-bold">{producto.nombreComercial}</h3>
-      <p className="text-gray-700">${producto.precio}</p>
+    <div className="border p-4 rounded shadow-md hover:shadow-lg flex flex-col">
+      {/* ✅ Imagen ajustada sin recorte */}
+      <div className="w-full h-56 bg-white flex justify-center items-center mb-2 rounded">
+        <img
+          src={producto.imagen}
+          alt={producto.nombreComercial}
+          className="max-h-full max-w-full object-contain"
+        />
+      </div>
+
+      {/* ✅ Info del producto */}
+      <h3 className="text-lg font-bold text-center">{producto.nombreComercial}</h3>
+      <p className="text-gray-700 text-center">${producto.precio}</p>
+
+      {/* ✅ Botón de acción */}
       <button
         onClick={handleAgregar}
-        className="mt-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded"
+        className="mt-3 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded w-full"
       >
         Agregar al carrito
       </button>

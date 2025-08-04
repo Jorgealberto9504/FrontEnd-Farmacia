@@ -1,4 +1,8 @@
 import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
+
+// ✅ Conexión con el servidor WebSocket
+const socket = io("http://localhost:8080");
 
 const PedidosAdmin = () => {
   const [pendientes, setPendientes] = useState([]);
@@ -6,18 +10,29 @@ const PedidosAdmin = () => {
   const [inicio, setInicio] = useState("");
   const [fin, setFin] = useState("");
 
-  // 🔹 Obtener pedidos (sin filtros o con filtros dinámicos)
+  // ✅ Normaliza productos para siempre tener nombre
+  const normalizarProductos = (productos) =>
+    productos.map((p) => ({
+      ...p,
+      displayName: p.productoId?.nombreComercial || p.nombre || p.nombreBackup || "Producto eliminado"
+    }));
+
+  // 🔹 Obtener todos los pedidos
   const obtenerPedidos = async (url = "http://localhost:8080/api/tickets/historial") => {
     try {
       const res = await fetch(url, { credentials: "include" });
       const data = await res.json();
       if (res.ok) {
-        const pend = data.tickets.filter(t => t.estado === "pendiente");
-        const sur = data.tickets.filter(t => t.estado === "surtido");
-        setPendientes(pend);
-        setSurtidos(sur);
-      } else {
-        alert(data.message || "Error al cargar pedidos");
+        setPendientes(
+          data.tickets
+            .filter((t) => t.estado === "pendiente")
+            .map((t) => ({ ...t, productos: normalizarProductos(t.productos) }))
+        );
+        setSurtidos(
+          data.tickets
+            .filter((t) => t.estado === "surtido")
+            .map((t) => ({ ...t, productos: normalizarProductos(t.productos) }))
+        );
       }
     } catch (error) {
       console.error("Error al obtener pedidos:", error);
@@ -26,41 +41,53 @@ const PedidosAdmin = () => {
 
   useEffect(() => {
     obtenerPedidos();
+
+    // ✅ Escuchar nuevos pedidos
+    socket.on("pedidoNuevo", (pedido) => {
+      pedido.productos = normalizarProductos(pedido.productos);
+      setPendientes((prev) => [...prev, pedido]);
+    });
+
+    // ✅ Escuchar cuando un pedido cambia a surtido
+    socket.on("pedidoActualizado", (pedido) => {
+      pedido.productos = normalizarProductos(pedido.productos);
+      setPendientes((prev) => prev.filter((p) => p.codigo !== pedido.codigo));
+      setSurtidos((prev) => [...prev, pedido]);
+    });
+
+    return () => {
+      socket.off("pedidoNuevo");
+      socket.off("pedidoActualizado");
+    };
   }, []);
 
-  // 🔹 Buscar pedidos surtidos por rango de fechas
+  // 🔹 Buscar pedidos surtidos por rango
   const buscarPorRango = async () => {
-    if (!inicio || !fin) {
-      alert("Selecciona ambas fechas");
-      return;
-    }
+    if (!inicio || !fin) return alert("Selecciona ambas fechas");
 
-    const query = `?inicio=${inicio}&fin=${fin}`;
     try {
-      const res = await fetch(`http://localhost:8080/api/tickets/surtidos/rango${query}`, {
-        credentials: "include",
-      });
+      const res = await fetch(
+        `http://localhost:8080/api/tickets/surtidos/rango?inicio=${inicio}&fin=${fin}`,
+        { credentials: "include" }
+      );
       const data = await res.json();
-
       if (res.ok) {
-        setSurtidos(data.tickets); // ✅ Solo muestra los pedidos filtrados
-        setPendientes([]);         // ✅ Oculta pendientes cuando se filtra
-      } else {
-        alert(data.message || "Error al buscar pedidos por rango");
+        setSurtidos(data.tickets.map((t) => ({ ...t, productos: normalizarProductos(t.productos) })));
+        setPendientes([]);
       }
     } catch (error) {
       console.error("Error al buscar por rango:", error);
     }
   };
 
-  // 🔹 Restablecer la lista completa
+  // 🔹 Restablecer filtros
   const limpiarFiltros = () => {
     setInicio("");
     setFin("");
-    obtenerPedidos(); // ✅ recarga todos los pedidos
+    obtenerPedidos();
   };
 
-  // 🔹 Marcar un pedido como surtido
+  // 🔹 Marcar pedido como surtido
   const marcarSurtido = async (codigo) => {
     if (!window.confirm("¿Marcar este pedido como surtido?")) return;
     try {
@@ -68,13 +95,7 @@ const PedidosAdmin = () => {
         method: "PUT",
         credentials: "include",
       });
-      const data = await res.json();
-      if (res.ok) {
-        alert("✅ Pedido marcado como surtido");
-        obtenerPedidos(); // ✅ refresca listas
-      } else {
-        alert(data.message || "Error al actualizar estado del pedido");
-      }
+      if (res.ok) alert("✅ Pedido marcado como surtido");
     } catch (error) {
       console.error("Error al marcar surtido:", error);
     }
@@ -87,28 +108,10 @@ const PedidosAdmin = () => {
       {/* 🔹 Filtro por rango de fechas */}
       <h2 className="text-xl font-bold mt-6">🔍 Buscar pedidos surtidos</h2>
       <div className="flex gap-2 mb-4">
-        <input 
-          type="date" 
-          value={inicio} 
-          onChange={(e) => setInicio(e.target.value)} 
-          className="border p-2 rounded" 
-        />
-        <input 
-          type="date" 
-          value={fin} 
-          onChange={(e) => setFin(e.target.value)} 
-          className="border p-2 rounded" 
-        />
-        <button 
-          onClick={buscarPorRango} 
-          className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700">
-          Buscar
-        </button>
-        <button 
-          onClick={limpiarFiltros} 
-          className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600">
-          Mostrar todo
-        </button>
+        <input type="date" value={inicio} onChange={(e) => setInicio(e.target.value)} className="border p-2 rounded" />
+        <input type="date" value={fin} onChange={(e) => setFin(e.target.value)} className="border p-2 rounded" />
+        <button onClick={buscarPorRango} className="bg-green-600 text-white px-3 py-2 rounded hover:bg-green-700">Buscar</button>
+        <button onClick={limpiarFiltros} className="bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600">Mostrar todo</button>
       </div>
 
       {/* 🔹 Lista de pedidos pendientes */}
@@ -122,22 +125,13 @@ const PedidosAdmin = () => {
             <p>📍 Dirección: {t.comprador?.address || "No disponible"}</p>
             <p>📞 Teléfono: {t.comprador?.phone || "No disponible"}</p>
             <p>💰 Total: ${t.total}</p>
-
             <h3 className="mt-2 font-semibold">Productos:</h3>
             <ul className="list-disc ml-5">
               {t.productos.map((p, idx) => (
-                <li key={p.productoId?._id || idx}>
-                  {p.productoId?.nombreComercial || "Producto eliminado"} - Cantidad: {p.cantidad}
-                </li>
+                <li key={p.productoId || idx}>{p.displayName} - Cantidad: {p.cantidad}</li>
               ))}
             </ul>
-
-            <button
-              onClick={() => marcarSurtido(t.codigo)}
-              className="bg-green-600 text-white px-4 py-2 mt-3 rounded hover:bg-green-700"
-            >
-              ✔️ Marcar como Surtido
-            </button>
+            <button onClick={() => marcarSurtido(t.codigo)} className="bg-green-600 text-white px-4 py-2 mt-3 rounded hover:bg-green-700">✔️ Marcar como Surtido</button>
           </div>
         ))
       )}
@@ -154,6 +148,12 @@ const PedidosAdmin = () => {
             <p>📍 Dirección: {t.comprador?.address || "No disponible"}</p>
             <p>📞 Teléfono: {t.comprador?.phone || "No disponible"}</p>
             <p>💰 Total: ${t.total}</p>
+            <h3 className="mt-2 font-semibold">Productos:</h3>
+            <ul className="list-disc ml-5">
+              {t.productos.map((p, idx) => (
+                <li key={p.productoId || idx}>{p.displayName} - Cantidad: {p.cantidad}</li>
+              ))}
+            </ul>
           </div>
         ))
       )}
